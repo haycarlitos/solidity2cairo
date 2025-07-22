@@ -105,10 +105,10 @@ edition = "2023_10"
 
 [dependencies]
 # Core Cairo / Starknet (Keccak, secp256k1, ECDSA helpers, etc.)
-starknet = ">=2.7.0"           # use the latest stable tag
+starknet = ">=2.11.4"           # use the latest stable tag
 
 # OpenZeppelin Cairo contracts (Ownable, IERC20, non_reentrant, Mapping…)
-openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.13.0" }
+openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v2.0.0" }
 
 # (Add any extra libs the generator requires here)
 ```
