@@ -1,58 +1,78 @@
-### ✨ TASK
+### ✨ TASK
 
-Translate the Solidity contract below into a **single‑file Cairo 1** implementation for Starknet.
+Convert the Solidity contract below into a **single‑file Cairo 1** implementation for Starknet.
 
-* Keep the external API (function names, params, events) identical.
-* Preserve business logic 1‑for‑1, adapting only where Cairo semantics differ.
-* Optimise for clarity over micro‑gas; follow Cairo best practices.
+* Preserve the external API (function names, params, events).
+* Re‑implement business logic 1‑for‑1, adjusting only where Cairo semantics differ.
+* Optimise for clarity over micro‑gas; follow current Cairo best‑practices.
 
 ---
 
-### 📜 Solidity Source (start)
+### 📜 Solidity Source (start)
 
 ```solidity
 <Paste the exact Solidity contract here>
 ```
 
-### 📜 Solidity Source (end)
-
-> **If any external/public function receives loosely‑typed user input** (e.g., `bytes`, dynamic arrays, `string`, struct blobs, arbitrary addresses):
-> **Add two or three representative example payloads right below the source** so the model can infer the most appropriate Cairo types and packing strategy.
+### 📜 Solidity Source (end)
 
 ---
 
-### 🛠  DELIVERABLE
+### 🧩 Provide example user‑inputs (when relevant)
 
-Return **only** the Cairo file contents—no extra prose:
+If any external/public function accepts free‑form or ambiguous payloads (e.g. `bytes`, `string`, dynamic arrays, mixed structs), add **2 – 3 representative examples** **immediately below** ­— formatted as **JSON snippets**.
+
+```json
+// Example payloads ─ remove if not needed
+{
+  "createOrder": {
+    "id": "0xabc…",
+    "amount": "1000000000000000000",
+    "token": "0x1234…"
+  },
+  "metaTx": {
+    "deadline": 1699999999,
+    "signature": "0xdeadbeef…"
+  }
+}
+```
+
+These help the generator infer the correct Cairo types and packing strategy.
+
+---
+
+### 🛠 DELIVERABLE
+
+Return **only** the Cairo file contents — no extra prose:
 
 1. **File name:** `<originalName>.cairo` (snake\_case).
-2. **Compilation:** Must build cleanly with the latest stable toolchain (`scarb build`).
-3. **No placeholders:** No TODOs or incomplete stubs; inline docstrings are fine, but skip explanatory essays.
+2. Builds cleanly with the latest toolchain (`scarb build`).
+3. No TODOs or placeholders; concise inline docstrings are fine.
 
 ---
 
-### ⚙️ REQUIREMENTS
+### ⚙️ REQUIREMENTS
 
-| Topic                   | Requirement                                                                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Syntax**              | Cairo 1                                                                                                                               |
-| **Imports**             | Prefer OpenZeppelin‑Cairo ≥ 0.12 when an analogue exists (Ownable, ReentrancyGuard, IERC20, Pausable…).                               |
-| **Storage**             | Mirror Solidity structs/enums; persist in `#[storage] struct Storage { … }` or `Mapping`s.                                            |
-| **Errors**              | Convert custom errors to `#[derive(Error)]` enums **or** `panic_with_reason("ErrorName")`; names must match Solidity.                 |
-| **Events**              | Re‑declare every Solidity event as a `#[event]` struct with the same field order and names.                                           |
-| **Type widths**         | `Uint256` for token amounts & large counters; `u8`/`u64` for small fields & timestamps.                                               |
-| **Re‑entrancy**         | Protect state‑changing externals with `@non_reentrant`.                                                                               |
-| **Ownable**             | Implement `only_owner` gating exactly as in Solidity.                                                                                 |
-| **Keccak & Signatures** | Replace `keccak256` with `starknet_keccak`; verify secp256k1 sigs via `openzeppelin::secp256k1::recover` (or `verify_eth_signature`). |
-| **Time**                | Use `get_block_timestamp()` instead of `block.timestamp`.                                                                             |
-| **Storage refunds**     | Where Solidity does `delete`, call `.pop(key)` or similar to reclaim fees.                                                            |
-| **Constants**           | Solidity `immutable` → Cairo `const` **or** constructor‑initialised storage to preserve behaviour.                                    |
+| Topic                 | Requirement                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Syntax**            | Cairo 1                                                                                                       |
+| **Imports**           | Use OpenZeppelin‑Cairo ≥ **0.13.0** when an analogue exists (Ownable, IERC20, non\_reentrant, Mapping, etc.). |
+| **Storage**           | Mirror Solidity structs/enums in `#[storage] struct Storage { … }` or OZ `Mapping`s.                          |
+| **Errors**            | Convert custom errors to `#[derive(Error)]` enums **or** `panic_with_reason("ErrorName")` — names must match. |
+| **Events**            | Re‑declare every Solidity event as a `#[event]` struct with the same field order & names.                     |
+| **Type widths**       | Use `Uint256` for token amounts & large counters; `u8`/`u64` for small fields & timestamps.                   |
+| **Re‑entrancy**       | Protect mutating externals with `@non_reentrant`.                                                             |
+| **Ownership**         | Implement `only_owner` gating via OZ `Ownable`.                                                               |
+| **Hash & Sig checks** | *EVM sigs:* `starknet_keccak` + `verify_eth_signature`.<br>*Starknet sigs:* `ecdsa::verify`.                  |
+| **Time**              | Replace `block.timestamp` with `get_block_timestamp()`.                                                       |
+| **Storage refunds**   | Where Solidity does `delete`, call `.pop(key)` (or equivalent) to reclaim fees.                               |
+| **Constants**         | Solidity `immutable` → Cairo `const` or constructor‑set storage vars, whichever preserves behaviour.          |
 
 ---
 
-### 📐 STRUCTURE GUIDE
+### 🏗 STRUCTURE GUIDE
 
-1. Imports & `use` statements
+1. **Imports & `use` statements**
 2. `#[storage] struct Storage`
 3. Custom error enum (`#[derive(Error)]`)
 4. `#[event]` structs
@@ -60,15 +80,37 @@ Return **only** the Cairo file contents—no extra prose:
 6. **Contract impl block**
 
    * `constructor( … )`
-   * External/public fns (same order as Solidity)
+   * External/public functions (keep Solidity order)
    * Internal helpers
-7. Optional unit‑test stubs under `#[cfg(test)]`
+7. Optional snforge unit‑test stubs under `#[cfg(test)]`
 
 ---
 
-### ✅ ACCEPTANCE CRITERIA
+### 🟢 ACCEPTANCE CRITERIA
 
-* `scarb build` succeeds with zero warnings.
+* `scarb build` prints zero warnings.
 * Function selectors & event topic hashes are byte‑identical to the Solidity originals.
-* All revert paths behave the same in snforge tests.
-* README itself stays clean—no additional commentary beyond this template.
+* All revert paths mirror Solidity behaviour in snforge tests.
+* README stays clean — no additional commentary beyond this template.
+
+---
+
+## 📦 Reference `Scarb.toml` snippet (latest versions — July 2025)
+
+```toml
+[package]
+name    = "translated_contract"
+version = "0.1.0"
+edition = "2023_10"
+
+[dependencies]
+# Core Cairo / Starknet (Keccak, secp256k1, ECDSA helpers, etc.)
+starknet = ">=2.7.0"           # use the latest stable tag
+
+# OpenZeppelin Cairo contracts (Ownable, IERC20, non_reentrant, Mapping…)
+openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.13.0" }
+
+# (Add any extra libs the generator requires here)
+```
+
+> **Tip:** always run `scarb update` before compiling to pull the newest minor releases.
